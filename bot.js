@@ -14,7 +14,6 @@ for (const file of commandFiles) {
 	client.commands.set(command.name, command);
 }
 
-
 client.once('ready', () => {
 	console.log('Ready!');
 });
@@ -25,13 +24,36 @@ client.on('ready', () => {
 	client.guilds.cache.get('707665433020465184').channels.cache.get('793629352503410688').messages.fetch('793630088218148894');
 });
 
-// Same code as above
-client.on('messageReactionAdd', (reaction, user) => {
+client.on('raw', event => {
+	console.log(event.t);
+    if (event.t == 'MESSAGE_REACTION_ADD'){
+        let reaction = event.d.emoji
+        let userID = event.d.user_id
+		let guildID = event.d.guild_id
+		let guild = client.guilds.cache.get(guildID)
+		let message = guild.channels.cache.get('793629352503410688').messages.fetch('793630088218148894');
+		console.log("adding");
+		reactionAdd(guild, reaction, userID);
+        // let role = guild.roles.cache.get(role_id) //role id is defined by yourself
+        // let user = guild.members.cache.get(userID) //You need to enable server members intent to use that command
+	} 
+	if (event.t == "MESSAGE_REACTION_REMOVE"){
+		let reaction = event.d.emoji
+        let userID = event.d.user_id
+        let messageID = event.d.message_id
+        let guildID = event.d.guild_id
+		let guild = client.guilds.cache.get(guildID)
+		console.log("removing");
+		reactionRemove(guild, reaction, userID);
+	}
+});
 
+// Same code as above
+function reactionAdd (guild, reaction, user){
+	
 	// variables for message, emoji, and member
-	const message = reaction.message;
-	const emoji = reaction.emoji;
-	const member = message.guild.members.fetch(user.id);
+	const emoji = reaction;
+	const member = guild.members.fetch(user);
 
 	// logic to add based on emoji, may need to be updated depending
 	// each has a promise adding each role
@@ -78,13 +100,14 @@ client.on('messageReactionAdd', (reaction, user) => {
 			console.log("Promise Rejected");
 	   });
 	}
-    console.log(`${user.username} added their "${reaction.emoji.name}" reaction.`);
-});
+    console.log(`${user} added their "${reaction.emoji.name}" reaction.`);
+};
 
-client.on('messageReactionRemove', (reaction, user) => {
-	const message = reaction.message;
-	const emoji = reaction.emoji;
-	const member = message.guild.members.fetch(user.id);
+function reactionRemove (guild, reaction, user){
+	
+	// variables for message, emoji, and member
+	const emoji = reaction;
+	const member = guild.members.fetch(user);
 
 	if (emoji.name == '🎥') {
 		member.then(member => {
@@ -119,7 +142,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 	}
 
     console.log(`${user.username} removed their "${reaction.emoji.name}" reaction.`);
-});
+};
 
 client.on('message', message => {
 	if (!message.content.startsWith(prefix) || message.author.bot) return;
